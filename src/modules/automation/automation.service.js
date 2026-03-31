@@ -1,5 +1,6 @@
 const Automation = require("./automation.model")
 const logger = require("../../core/logger")
+const axios = require("axios")
 
 /*
 |--------------------------------------------------------------------------
@@ -11,7 +12,7 @@ async function runAutomations(event, payload) {
   try {
     logger.info(`⚡ Automation event: ${event}`)
 
-    // ✅ Buscar automations activas
+    // Buscar automations activas
     const automations = await Automation.find({
       event,
       active: true,
@@ -36,6 +37,7 @@ async function runAutomations(event, payload) {
     }
 
     logger.info(`✅ Automation completed for ${event}`)
+
   } catch (error) {
     logger.error("Automation execution error")
     logger.error(error)
@@ -52,25 +54,48 @@ async function executeAction(action, payload) {
   try {
     if (!action) return
 
-    // ✅ Normalizar tipo
     const type = action.type?.toLowerCase()
 
     switch (type) {
 
       /*
       |--------------------------------------------------------------------------
-      | EMAIL
+      | WEBHOOK ACTION ✅
+      |--------------------------------------------------------------------------
+      */
+      case "webhook":
+      case "send_webhook":
+
+        if (!action.config?.url) {
+          logger.warn("Webhook action missing URL")
+          return
+        }
+
+        logger.info(`🌐 Sending webhook to ${action.config.url}`)
+
+        await axios.post(action.config.url, {
+          event: "lead.created",
+          data: payload,
+        })
+
+        logger.info("✅ Webhook sent successfully")
+        break
+
+
+      /*
+      |--------------------------------------------------------------------------
+      | EMAIL ACTION
       |--------------------------------------------------------------------------
       */
       case "email":
       case "send_email":
         logger.info(`📧 Sending email to ${payload.email}`)
-        // TODO: integrar nodemailer / resend / sendgrid
         break
+
 
       /*
       |--------------------------------------------------------------------------
-      | CRM
+      | CRM ACTION
       |--------------------------------------------------------------------------
       */
       case "crm":
@@ -78,15 +103,17 @@ async function executeAction(action, payload) {
         logger.info(`📦 Sending lead to CRM: ${payload.email}`)
         break
 
+
       /*
       |--------------------------------------------------------------------------
-      | NOTIFICATION
+      | NOTIFICATION ACTION
       |--------------------------------------------------------------------------
       */
       case "notify":
       case "notification":
         logger.info(`🔔 Notifying team about ${payload.email}`)
         break
+
 
       /*
       |--------------------------------------------------------------------------
@@ -99,7 +126,7 @@ async function executeAction(action, payload) {
 
   } catch (error) {
     logger.error("Action execution failed")
-    logger.error(error)
+    logger.error(error.response?.data || error.message)
   }
 }
 
