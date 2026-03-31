@@ -2,6 +2,8 @@ require("dotenv").config()
 
 const express = require("express")
 const cors = require("cors")
+const helmet = require("helmet")
+const { v4: uuidv4 } = require("uuid")
 
 // ======================
 // CORE
@@ -37,6 +39,12 @@ const app = express()
 app.set("trust proxy", 1)
 
 /* ======================================================
+   SECURITY
+====================================================== */
+
+app.use(helmet())
+
+/* ======================================================
    GLOBAL MIDDLEWARES
 ====================================================== */
 
@@ -47,15 +55,25 @@ app.use(
   })
 )
 
-app.use(express.json())
+app.use(express.json({ limit: "10mb" }))
 app.use(express.urlencoded({ extended: true }))
 
 /* ======================================================
-   REQUEST LOGGER (PRO)
+   REQUEST ID (PRO DEBUGGING)
 ====================================================== */
 
 app.use((req, res, next) => {
-  logger.info(`➡️ ${req.method} ${req.originalUrl}`)
+  req.id = uuidv4()
+  res.setHeader("X-Request-Id", req.id)
+  next()
+})
+
+/* ======================================================
+   REQUEST LOGGER
+====================================================== */
+
+app.use((req, res, next) => {
+  logger.info(`➡️ [${req.id}] ${req.method} ${req.originalUrl}`)
   next()
 })
 
@@ -81,9 +99,9 @@ app.get("/", (req, res) => {
    API ROUTES
 ====================================================== */
 
-app.use("/api/auth", authRoutes)          // 🔐 JWT AUTH
-app.use("/api/leads", leadRoutes)         // 📦 Leads
-app.use("/api/automations", automationRoutes) // ⚡ Automations
+app.use("/api/auth", authRoutes)
+app.use("/api/leads", leadRoutes)
+app.use("/api/automations", automationRoutes)
 
 /* ======================================================
    404 HANDLER
@@ -100,11 +118,14 @@ app.use((req, res) => {
 ====================================================== */
 
 app.use((err, req, res, next) => {
-  logger.error("🔥 GLOBAL ERROR")
+  logger.error(`🔥 [${req.id}] GLOBAL ERROR`)
   logger.error(err)
 
   res.status(err.status || 500).json({
-    error: err.message || "Internal Server Error",
+    error:
+      config.app.env === "production"
+        ? "Internal Server Error"
+        : err.message,
   })
 })
 
@@ -116,24 +137,24 @@ async function startServer() {
   try {
     logger.info("🚀 Starting Lead Automation Platform...")
 
-    // ✅ 1. CONNECT DATABASE
+    // ✅ DATABASE
     await connectDatabase()
     logger.info("✅ Database connected")
 
-    // ✅ 2. INIT AUTOMATIONS
+    // ✅ AUTOMATIONS
     initAutomationListeners()
     logger.info("🎧 Automation listeners initialized")
 
-    // ✅ 3. START SERVER
+    // ✅ SERVER
     const server = app.listen(config.app.port, () => {
       logger.info(
         `🌎 Server running at http://localhost:${config.app.port} (${config.app.env})`
       )
     })
 
-    /* ======================================================
+    /* ======================
        GRACEFUL SHUTDOWN
-    ====================================================== */
+    ====================== */
 
     const shutdown = (signal) => {
       logger.info(`🛑 ${signal} received. Closing server...`)
@@ -147,9 +168,9 @@ async function startServer() {
     process.on("SIGINT", shutdown)
     process.on("SIGTERM", shutdown)
 
-    /* ======================================================
-       CRITICAL ERROR HANDLING
-    ====================================================== */
+    /* ======================
+       CRITICAL ERRORS
+    ====================== */
 
     process.on("uncaughtException", (error) => {
       logger.error("💥 Uncaught Exception")
