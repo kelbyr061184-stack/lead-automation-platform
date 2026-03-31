@@ -24,10 +24,17 @@ const {
 // ======================
 // ROUTES
 // ======================
+const authRoutes = require("./modules/auth/auth.routes")
 const leadRoutes = require("./modules/lead/lead.routes")
 const automationRoutes = require("./modules/automation/automation.routes")
 
 const app = express()
+
+/* ======================================================
+   TRUST PROXY (RENDER / CLOUD)
+====================================================== */
+
+app.set("trust proxy", 1)
 
 /* ======================================================
    GLOBAL MIDDLEWARES
@@ -36,10 +43,21 @@ const app = express()
 app.use(
   cors({
     origin: "*",
+    credentials: true,
   })
 )
 
 app.use(express.json())
+app.use(express.urlencoded({ extended: true }))
+
+/* ======================================================
+   REQUEST LOGGER (PRO)
+====================================================== */
+
+app.use((req, res, next) => {
+  logger.info(`➡️ ${req.method} ${req.originalUrl}`)
+  next()
+})
 
 /* ======================================================
    HEALTH CHECK
@@ -63,8 +81,9 @@ app.get("/", (req, res) => {
    API ROUTES
 ====================================================== */
 
-app.use("/api/leads", leadRoutes)
-app.use("/api/automations", automationRoutes)
+app.use("/api/auth", authRoutes)          // 🔐 JWT AUTH
+app.use("/api/leads", leadRoutes)         // 📦 Leads
+app.use("/api/automations", automationRoutes) // ⚡ Automations
 
 /* ======================================================
    404 HANDLER
@@ -97,14 +116,15 @@ async function startServer() {
   try {
     logger.info("🚀 Starting Lead Automation Platform...")
 
-    // ✅ 1. CONNECT DATABASE FIRST
+    // ✅ 1. CONNECT DATABASE
     await connectDatabase()
     logger.info("✅ Database connected")
 
-    // ✅ 2. INIT EVENT LISTENERS (ONLY ONCE)
+    // ✅ 2. INIT AUTOMATIONS
     initAutomationListeners()
+    logger.info("🎧 Automation listeners initialized")
 
-    // ✅ 3. START HTTP SERVER
+    // ✅ 3. START SERVER
     const server = app.listen(config.app.port, () => {
       logger.info(
         `🌎 Server running at http://localhost:${config.app.port} (${config.app.env})`
@@ -115,7 +135,7 @@ async function startServer() {
        GRACEFUL SHUTDOWN
     ====================================================== */
 
-    const shutdown = async (signal) => {
+    const shutdown = (signal) => {
       logger.info(`🛑 ${signal} received. Closing server...`)
 
       server.close(() => {
@@ -128,7 +148,7 @@ async function startServer() {
     process.on("SIGTERM", shutdown)
 
     /* ======================================================
-       UNCAUGHT ERRORS (VERY IMPORTANT)
+       CRITICAL ERROR HANDLING
     ====================================================== */
 
     process.on("uncaughtException", (error) => {

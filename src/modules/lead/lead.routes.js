@@ -1,6 +1,11 @@
 const express = require("express")
 const router = express.Router()
 
+/*
+|--------------------------------------------------------------------------
+| Controllers
+|--------------------------------------------------------------------------
+*/
 const {
   createLead,
   getLeads,
@@ -9,47 +14,85 @@ const {
   deleteLead,
 } = require("./lead.controller")
 
-// Validation
+/*
+|--------------------------------------------------------------------------
+| Middleware
+|--------------------------------------------------------------------------
+*/
 const validate = require("../../core/middleware/validate")
+const auth = require("../auth/auth.middleware") // ✅ JWT Middleware
 
+/*
+|--------------------------------------------------------------------------
+| Validation Schemas
+|--------------------------------------------------------------------------
+*/
 const {
   createLeadSchema,
   updateLeadSchema,
   idParamSchema,
 } = require("./validation/lead.validation")
 
-/* ============================
-   LEAD ROUTES
-============================ */
+/* ==========================================================
+   LEAD ROUTES (PROTECTED 🔐)
+========================================================== */
 
-// Crear lead
+/*
+|--------------------------------------------------------------------------
+| Crear Lead
+|--------------------------------------------------------------------------
+*/
 router.post(
   "/",
+  auth,
   validate(createLeadSchema),
   createLead
 )
 
-// Obtener todos los leads
-router.get("/", getLeads)
+/*
+|--------------------------------------------------------------------------
+| Obtener todos los leads
+|--------------------------------------------------------------------------
+*/
+router.get(
+  "/",
+  auth,
+  getLeads
+)
 
-// Obtener un lead por ID
+/*
+|--------------------------------------------------------------------------
+| Obtener lead por ID
+|--------------------------------------------------------------------------
+*/
 router.get(
   "/:id",
+  auth,
   validate(idParamSchema, "params"),
   getLeadById
 )
 
-// Actualizar lead
+/*
+|--------------------------------------------------------------------------
+| Actualizar lead
+|--------------------------------------------------------------------------
+*/
 router.put(
   "/:id",
+  auth,
   validate(idParamSchema, "params"),
   validate(updateLeadSchema),
   updateLead
 )
 
-// Eliminar lead
+/*
+|--------------------------------------------------------------------------
+| Eliminar lead
+|--------------------------------------------------------------------------
+*/
 router.delete(
   "/:id",
+  auth,
   validate(idParamSchema, "params"),
   deleteLead
 )
