@@ -1,12 +1,23 @@
 const express = require("express")
 const router = express.Router()
 
+const auth = require("../../middlewares/auth.middleware")
+
 const {
-  register,
-  login,
+  getMe,
+  updateMe,
 } = require("./user.controller")
 
-router.post("/register", register)
-router.post("/login", login)
+/*
+|--------------------------------------------------------------------------
+| USER ROUTES (PROTECTED)
+|--------------------------------------------------------------------------
+*/
+
+// GET current user
+router.get("/me", auth, getMe)
+
+// UPDATE profile
+router.patch("/me", auth, updateMe)
 
 module.exports = router

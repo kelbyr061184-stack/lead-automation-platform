@@ -1,37 +1,22 @@
-const bcrypt = require("bcryptjs")
-const User = require("./user.model")
-const { generateToken } = require("../../core/auth/jwt")
+const User = require("../auth/user.model")
 
 /*
 |--------------------------------------------------------------------------
-| REGISTER
+| GET CURRENT USER
 |--------------------------------------------------------------------------
+| GET /api/users/me
 */
-exports.register = async (req, res, next) => {
+exports.getMe = async (req, res, next) => {
   try {
-    const { name, email, password } = req.body
+    const user = await User.findById(req.user.id).select("-password")
 
-    const exists = await User.findOne({ email })
-
-    if (exists)
-      return res.status(400).json({
-        error: "User already exists",
+    if (!user) {
+      return res.status(404).json({
+        error: "User not found",
       })
+    }
 
-    const hashed = await bcrypt.hash(password, 10)
-
-    const user = await User.create({
-      name,
-      email,
-      password: hashed,
-    })
-
-    const token = generateToken(user)
-
-    res.json({
-      user,
-      token,
-    })
+    res.json(user)
   } catch (err) {
     next(err)
   }
@@ -39,33 +24,21 @@ exports.register = async (req, res, next) => {
 
 /*
 |--------------------------------------------------------------------------
-| LOGIN
+| UPDATE PROFILE
 |--------------------------------------------------------------------------
+| PATCH /api/users/me
 */
-exports.login = async (req, res, next) => {
+exports.updateMe = async (req, res, next) => {
   try {
-    const { email, password } = req.body
+    const { name } = req.body
 
-    const user = await User.findOne({ email }).select("+password")
+    const user = await User.findByIdAndUpdate(
+      req.user.id,
+      { name },
+      { new: true }
+    ).select("-password")
 
-    if (!user)
-      return res.status(401).json({
-        error: "Invalid credentials",
-      })
-
-    const valid = await bcrypt.compare(password, user.password)
-
-    if (!valid)
-      return res.status(401).json({
-        error: "Invalid credentials",
-      })
-
-    const token = generateToken(user)
-
-    res.json({
-      user,
-      token,
-    })
+    res.json(user)
   } catch (err) {
     next(err)
   }

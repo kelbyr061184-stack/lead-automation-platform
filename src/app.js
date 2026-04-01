@@ -27,6 +27,7 @@ const {
 // ROUTES
 // ======================
 const authRoutes = require("./modules/auth/auth.routes")
+const userRoutes = require("./modules/user/user.routes") // ✅ FIX
 const leadRoutes = require("./modules/lead/lead.routes")
 const automationRoutes = require("./modules/automation/automation.routes")
 
@@ -50,7 +51,7 @@ app.use(helmet())
 
 app.use(
   cors({
-    origin: true, // ✅ permite frontend dinámico (Render/Vercel/etc)
+    origin: true,
     credentials: true,
   })
 )
@@ -59,7 +60,7 @@ app.use(express.json({ limit: "10mb" }))
 app.use(express.urlencoded({ extended: true }))
 
 /* ======================================================
-   REQUEST ID (PRO DEBUGGING)
+   REQUEST ID
 ====================================================== */
 
 app.use((req, res, next) => {
@@ -100,6 +101,7 @@ app.get("/", (req, res) => {
 ====================================================== */
 
 app.use("/api/auth", authRoutes)
+app.use("/api/users", userRoutes) // ✅ FIX CRÍTICO
 app.use("/api/leads", leadRoutes)
 app.use("/api/automations", automationRoutes)
 
@@ -114,7 +116,7 @@ app.use((req, res) => {
 })
 
 /* ======================================================
-   GLOBAL ERROR HANDLER (FIXED ⭐)
+   GLOBAL ERROR HANDLER
 ====================================================== */
 
 app.use((err, req, res, next) => {
@@ -168,7 +170,6 @@ async function startServer() {
         process.exit(0)
       })
 
-      // 🔥 fuerza cierre si algo se queda colgado
       setTimeout(() => {
         logger.error("⚠️ Force shutdown")
         process.exit(1)
