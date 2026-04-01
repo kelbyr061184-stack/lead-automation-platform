@@ -1,4 +1,4 @@
-const { verifyToken } = require("./jwt")
+const { verifyToken } = require("../auth/jwt")
 
 module.exports = function auth(req, res, next) {
   try {
