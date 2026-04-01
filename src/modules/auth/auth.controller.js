@@ -1,4 +1,4 @@
-const authService = require("./auth.service")
+const authService = require("./auth.service");
 
 /*
 |--------------------------------------------------------------------------
@@ -7,14 +7,14 @@ const authService = require("./auth.service")
 */
 async function register(req, res, next) {
   try {
-    const token = await authService.register(req.body)
+    const token = await authService.register(req.body);
 
-    res.status(201).json({
+    return res.status(201).json({
       message: "User registered successfully",
       token,
-    })
+    });
   } catch (error) {
-    next(error)
+    next(error);
   }
 }
 
@@ -25,14 +25,14 @@ async function register(req, res, next) {
 */
 async function login(req, res, next) {
   try {
-    const token = await authService.login(req.body)
+    const token = await authService.login(req.body);
 
-    res.json({
+    return res.status(200).json({
       message: "Login successful",
       token,
-    })
+    });
   } catch (error) {
-    next(error)
+    next(error);
   }
 }
 
@@ -41,15 +41,19 @@ async function login(req, res, next) {
 | GET CURRENT USER (JWT REQUIRED)
 |--------------------------------------------------------------------------
 */
-async function me(req, res) {
-  // req.user viene del auth.middleware
-  res.json({
-    user: req.user,
-  })
+async function me(req, res, next) {
+  try {
+    // req.user viene del auth.middleware
+    return res.status(200).json({
+      user: req.user,
+    });
+  } catch (error) {
+    next(error);
+  }
 }
 
 module.exports = {
   register,
   login,
   me,
-}
+};

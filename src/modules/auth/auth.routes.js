@@ -1,8 +1,8 @@
-const express = require("express")
-const controller = require("./auth.controller")
-const authMiddleware = require("./auth.middleware")
+const express = require("express");
+const controller = require("./auth.controller");
+const authMiddleware = require("../../core/middleware/auth.middleware");
 
-const router = express.Router()
+const router = express.Router();
 
 /*
 |--------------------------------------------------------------------------
@@ -11,12 +11,12 @@ const router = express.Router()
 */
 
 // ✅ Register user
-router.post("/register", controller.register)
+router.post("/register", controller.register);
 
 // ✅ Login user
-router.post("/login", controller.login)
+router.post("/login", controller.login);
 
-// ✅ Get current authenticated user (JWT REQUIRED)
-router.get("/me", authMiddleware, controller.me)
+// ✅ Get authenticated user (JWT required)
+router.get("/me", authMiddleware, controller.me);
 
-module.exports = router
+module.exports = router;
