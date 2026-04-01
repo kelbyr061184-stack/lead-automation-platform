@@ -50,7 +50,7 @@ app.use(helmet())
 
 app.use(
   cors({
-    origin: "*",
+    origin: true, // ✅ permite frontend dinámico (Render/Vercel/etc)
     credentials: true,
   })
 )
@@ -114,17 +114,21 @@ app.use((req, res) => {
 })
 
 /* ======================================================
-   GLOBAL ERROR HANDLER
+   GLOBAL ERROR HANDLER (FIXED ⭐)
 ====================================================== */
 
 app.use((err, req, res, next) => {
   logger.error(`🔥 [${req.id}] GLOBAL ERROR`)
   logger.error(err)
 
-  res.status(err.status || 500).json({
+  const statusCode = err.statusCode || err.status || 500
+
+  res.status(statusCode).json({
     error:
       config.app.env === "production"
-        ? "Internal Server Error"
+        ? statusCode === 500
+          ? "Internal Server Error"
+          : err.message
         : err.message,
   })
 })
@@ -163,6 +167,12 @@ async function startServer() {
         logger.info("✅ HTTP server closed")
         process.exit(0)
       })
+
+      // 🔥 fuerza cierre si algo se queda colgado
+      setTimeout(() => {
+        logger.error("⚠️ Force shutdown")
+        process.exit(1)
+      }, 10000)
     }
 
     process.on("SIGINT", shutdown)
@@ -175,13 +185,13 @@ async function startServer() {
     process.on("uncaughtException", (error) => {
       logger.error("💥 Uncaught Exception")
       logger.error(error)
-      process.exit(1)
+      shutdown("uncaughtException")
     })
 
     process.on("unhandledRejection", (reason) => {
       logger.error("💥 Unhandled Rejection")
       logger.error(reason)
-      process.exit(1)
+      shutdown("unhandledRejection")
     })
 
   } catch (error) {

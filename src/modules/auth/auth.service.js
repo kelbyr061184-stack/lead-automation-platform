@@ -2,7 +2,24 @@ const bcrypt = require("bcryptjs")
 const jwt = require("jsonwebtoken")
 const User = require("./user.model")
 
-const JWT_SECRET = process.env.JWT_SECRET || "supersecret"
+/*
+|--------------------------------------------------------------------------
+| CUSTOM ERROR (PRO)
+|--------------------------------------------------------------------------
+*/
+
+class AppError extends Error {
+  constructor(message, statusCode) {
+    super(message)
+    this.statusCode = statusCode
+  }
+}
+
+const JWT_SECRET = process.env.JWT_SECRET
+
+if (!JWT_SECRET) {
+  throw new Error("JWT_SECRET is not defined")
+}
 
 /*
 |--------------------------------------------------------------------------
@@ -13,9 +30,15 @@ const JWT_SECRET = process.env.JWT_SECRET || "supersecret"
 async function register(data) {
   const { email, password, name } = data
 
+  if (!email || !password || !name) {
+    throw new AppError("Missing fields", 400)
+  }
+
   const exists = await User.findOne({ email })
 
-  if (exists) throw new Error("User already exists")
+  if (exists) {
+    throw new AppError("User already exists", 409)
+  }
 
   const hashedPassword = await bcrypt.hash(password, 10)
 
@@ -37,13 +60,22 @@ async function register(data) {
 async function login(data) {
   const { email, password } = data
 
+  if (!email || !password) {
+    throw new AppError("Email and password required", 400)
+  }
+
   const user = await User.findOne({ email })
 
-  if (!user) throw new Error("Invalid credentials")
+  // 🔐 MISMO ERROR PARA SEGURIDAD
+  if (!user) {
+    throw new AppError("Invalid credentials", 401)
+  }
 
   const valid = await bcrypt.compare(password, user.password)
 
-  if (!valid) throw new Error("Invalid credentials")
+  if (!valid) {
+    throw new AppError("Invalid credentials", 401)
+  }
 
   return generateToken(user)
 }
@@ -61,7 +93,9 @@ function generateToken(user) {
       email: user.email,
     },
     JWT_SECRET,
-    { expiresIn: "7d" }
+    {
+      expiresIn: "7d",
+    }
   )
 }
 
