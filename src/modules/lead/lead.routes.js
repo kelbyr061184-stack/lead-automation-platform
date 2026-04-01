@@ -20,7 +20,7 @@ const {
 |--------------------------------------------------------------------------
 */
 const validate = require("../../core/middleware/validate")
-const auth = require("../auth/auth.middleware") // ✅ JWT Middleware
+const auth = require("../../middlewares/auth.middleware") // ✅ JWT Middleware
 
 /*
 |--------------------------------------------------------------------------
