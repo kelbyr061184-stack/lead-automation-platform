@@ -27,7 +27,7 @@ const {
 // ROUTES
 // ======================
 const authRoutes = require("./modules/auth/auth.routes")
-const userRoutes = require("./modules/user/user.routes") // ✅ FIX
+const userRoutes = require("./modules/user/user.routes")
 const leadRoutes = require("./modules/lead/lead.routes")
 const automationRoutes = require("./modules/automation/automation.routes")
 
@@ -36,25 +36,47 @@ const app = express()
 /* ======================================================
    TRUST PROXY (RENDER / CLOUD)
 ====================================================== */
-
 app.set("trust proxy", 1)
 
 /* ======================================================
    SECURITY
 ====================================================== */
-
-app.use(helmet())
+app.use(
+  helmet({
+    crossOriginResourcePolicy: false,
+  })
+)
 
 /* ======================================================
-   GLOBAL MIDDLEWARES
+   CORS FIX (🔥 LOGIN ERROR SOLVED)
 ====================================================== */
+
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://localhost:5173",
+  "https://lead-automation-dashboard-two.vercel.app",
+]
 
 app.use(
   cors({
-    origin: true,
+    origin: function (origin, callback) {
+      // allow non-browser tools (postman, curl)
+      if (!origin) return callback(null, true)
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true)
+      }
+
+      logger.warn(`⛔ Blocked CORS origin: ${origin}`)
+      return callback(new Error("Not allowed by CORS"))
+    },
     credentials: true,
   })
 )
+
+/* ======================================================
+   BODY PARSER
+====================================================== */
 
 app.use(express.json({ limit: "10mb" }))
 app.use(express.urlencoded({ extended: true }))
@@ -101,7 +123,7 @@ app.get("/", (req, res) => {
 ====================================================== */
 
 app.use("/api/auth", authRoutes)
-app.use("/api/users", userRoutes) // ✅ FIX CRÍTICO
+app.use("/api/users", userRoutes)
 app.use("/api/leads", leadRoutes)
 app.use("/api/automations", automationRoutes)
 
@@ -143,15 +165,15 @@ async function startServer() {
   try {
     logger.info("🚀 Starting Lead Automation Platform...")
 
-    // ✅ DATABASE
+    // DATABASE
     await connectDatabase()
     logger.info("✅ Database connected")
 
-    // ✅ AUTOMATIONS
+    // AUTOMATIONS
     initAutomationListeners()
     logger.info("🎧 Automation listeners initialized")
 
-    // ✅ SERVER
+    // SERVER
     const server = app.listen(config.app.port, () => {
       logger.info(
         `🌎 Server running at http://localhost:${config.app.port} (${config.app.env})`
