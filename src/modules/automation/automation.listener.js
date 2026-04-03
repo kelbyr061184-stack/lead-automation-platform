@@ -2,41 +2,73 @@ const eventBus = require("../../core/events/event.bus")
 const { runAutomations } = require("./automation.service")
 const logger = require("../../core/logger")
 
+/*
+|--------------------------------------------------------------------------
+| SINGLETON PROTECTION
+|--------------------------------------------------------------------------
+*/
+
 let initialized = false
 
 function initAutomationListeners() {
-  // ✅ Evita registrar listeners duplicados
-  if (initialized) return
+  if (initialized) {
+    logger.warn("⚠️ Automation listeners already initialized — skipping")
+    return
+  }
 
   initialized = true
 
-  logger.info("🎧 Automation listeners initialized")
+  logger.info("🎧 Initializing automation listeners...")
 
   /*
   |--------------------------------------------------------------------------
-  | LEAD CREATED
+  | SAFE EVENT HANDLER WRAPPER
   |--------------------------------------------------------------------------
   */
 
-  eventBus.on("lead.created", async (lead) => {
-    try {
-      logger.info("⚡ lead.created event received")
+  const safeHandler = (eventName, handler) => {
+    return async (...args) => {
+      try {
+        logger.info(`⚡ Event received: ${eventName}`)
 
-      // ✅ Validar payload
+        await handler(...args)
+
+        logger.info(`✅ Event processed: ${eventName}`)
+      } catch (error) {
+        logger.error(`🔥 Error processing event: ${eventName}`)
+        logger.error(error)
+      }
+    }
+  }
+
+  /*
+  |--------------------------------------------------------------------------
+  | LEAD CREATED EVENT
+  |--------------------------------------------------------------------------
+  */
+
+  eventBus.removeAllListeners("lead.created") // 🔥 evita duplicados
+
+  eventBus.on(
+    "lead.created",
+    safeHandler("lead.created", async (lead) => {
       if (!lead) {
-        logger.warn("No lead received in event")
+        logger.warn("⚠️ lead.created received without payload")
         return
       }
 
-      // ✅ Ejecutar automations
       await runAutomations("lead.created", lead)
+    })
+  )
 
-    } catch (error) {
-      logger.error("Automation listener error")
-      logger.error(error)
-    }
-  })
+  logger.info("🎧 Automation listeners initialized successfully")
 }
+
+/*
+|--------------------------------------------------------------------------
+| EXPORT
+|--------------------------------------------------------------------------
+*/
 
 module.exports = {
   initAutomationListeners,
