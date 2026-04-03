@@ -34,9 +34,9 @@ const automationRoutes = require("./modules/automation/automation.routes")
 const app = express()
 
 /* ======================================================
-   TRUST PROXY (RENDER / CLOUD)
+   TRUST PROXY (RENDER SAFE)
 ====================================================== */
-app.set("trust proxy", 1)
+app.set("trust proxy", true)
 
 /* ======================================================
    SECURITY
@@ -48,7 +48,7 @@ app.use(
 )
 
 /* ======================================================
-   CORS FIX (🔥 LOGIN ERROR SOLVED)
+   CORS (FIX LOGIN + VERCEL + RENDER)
 ====================================================== */
 
 const allowedOrigins = [
@@ -59,16 +59,15 @@ const allowedOrigins = [
 
 app.use(
   cors({
-    origin: function (origin, callback) {
-      // allow non-browser tools (postman, curl)
+    origin(origin, callback) {
       if (!origin) return callback(null, true)
 
       if (allowedOrigins.includes(origin)) {
         return callback(null, true)
       }
 
-      logger.warn(`⛔ Blocked CORS origin: ${origin}`)
-      return callback(new Error("Not allowed by CORS"))
+      logger.warn(`⛔ Blocked CORS: ${origin}`)
+      return callback(null, false)
     },
     credentials: true,
   })
@@ -96,7 +95,7 @@ app.use((req, res, next) => {
 ====================================================== */
 
 app.use((req, res, next) => {
-  logger.info(`➡️ [${req.id}] ${req.method} ${req.originalUrl}`)
+  logger.info(`[${req.id}] ${req.method} ${req.originalUrl}`)
   next()
 })
 
@@ -119,6 +118,22 @@ app.get("/", (req, res) => {
 })
 
 /* ======================================================
+   API ROOT (🔥 DEBUG ENDPOINT)
+====================================================== */
+
+app.get("/api", (req, res) => {
+  res.json({
+    message: "API ONLINE",
+    routes: [
+      "/api/auth",
+      "/api/users",
+      "/api/leads",
+      "/api/automations",
+    ],
+  })
+})
+
+/* ======================================================
    API ROUTES
 ====================================================== */
 
@@ -134,6 +149,7 @@ app.use("/api/automations", automationRoutes)
 app.use((req, res) => {
   res.status(404).json({
     error: "Route not found",
+    path: req.originalUrl,
   })
 })
 
@@ -142,7 +158,7 @@ app.use((req, res) => {
 ====================================================== */
 
 app.use((err, req, res, next) => {
-  logger.error(`🔥 [${req.id}] GLOBAL ERROR`)
+  logger.error(`🔥 GLOBAL ERROR [${req.id}]`)
   logger.error(err)
 
   const statusCode = err.statusCode || err.status || 500
@@ -165,19 +181,16 @@ async function startServer() {
   try {
     logger.info("🚀 Starting Lead Automation Platform...")
 
-    // DATABASE
     await connectDatabase()
     logger.info("✅ Database connected")
 
-    // AUTOMATIONS
     initAutomationListeners()
     logger.info("🎧 Automation listeners initialized")
 
-    // SERVER
-    const server = app.listen(config.app.port, () => {
-      logger.info(
-        `🌎 Server running at http://localhost:${config.app.port} (${config.app.env})`
-      )
+    const PORT = process.env.PORT || config.app.port || 5000
+
+    const server = app.listen(PORT, "0.0.0.0", () => {
+      logger.info(`🌎 Server running on port ${PORT}`)
     })
 
     /* ======================
@@ -185,38 +198,28 @@ async function startServer() {
     ====================== */
 
     const shutdown = (signal) => {
-      logger.info(`🛑 ${signal} received. Closing server...`)
+      logger.info(`🛑 ${signal} received`)
 
       server.close(() => {
-        logger.info("✅ HTTP server closed")
+        logger.info("✅ Server closed")
         process.exit(0)
       })
 
-      setTimeout(() => {
-        logger.error("⚠️ Force shutdown")
-        process.exit(1)
-      }, 10000)
+      setTimeout(() => process.exit(1), 10000)
     }
 
     process.on("SIGINT", shutdown)
     process.on("SIGTERM", shutdown)
 
-    /* ======================
-       CRITICAL ERRORS
-    ====================== */
-
     process.on("uncaughtException", (error) => {
-      logger.error("💥 Uncaught Exception")
-      logger.error(error)
+      logger.error("💥 Uncaught Exception", error)
       shutdown("uncaughtException")
     })
 
     process.on("unhandledRejection", (reason) => {
-      logger.error("💥 Unhandled Rejection")
-      logger.error(reason)
+      logger.error("💥 Unhandled Rejection", reason)
       shutdown("unhandledRejection")
     })
-
   } catch (error) {
     logger.error("❌ Failed to start server")
     logger.error(error)
