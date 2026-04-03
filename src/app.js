@@ -48,18 +48,20 @@ app.use(
 )
 
 /* ======================================================
-   CORS (FIX LOGIN + VERCEL + RENDER)
+   CORS (FIX LOGIN + RAILWAY + VERCEL + RENDER)
 ====================================================== */
 
 const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:5173",
   "https://lead-automation-dashboard-two.vercel.app",
+  "https://lead-automation-dashboard-production.up.railway.app", // ← DOMINIO DE RAILWAY AGREGADO
 ]
 
 app.use(
   cors({
     origin(origin, callback) {
+      // Permitir solicitudes sin origen (como Postman, curl)
       if (!origin) return callback(null, true)
 
       if (allowedOrigins.includes(origin)) {
@@ -67,7 +69,7 @@ app.use(
       }
 
       logger.warn(`⛔ Blocked CORS: ${origin}`)
-      return callback(null, false)
+      return callback(null, false) // Rechaza otros orígenes
     },
     credentials: true,
   })
