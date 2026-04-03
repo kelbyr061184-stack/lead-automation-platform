@@ -1,41 +1,44 @@
 # 🚀 Lead Automation Platform
 
-Production-ready **SaaS platform** for lead management and marketing automation.
+Lead Automation Platform is a **production-ready SaaS application** designed to manage leads, automate follow-ups, and centralize sales workflows.
 
-This project demonstrates a real-world full-stack architecture using modern cloud deployment, secure authentication, and scalable API design.
+This project represents a modern cloud-based automation system built with real startup architecture.
 
 ---
 
-## 🌐 Live Application
+## 🌐 Live System
 
-🖥 **Dashboard (Frontend — Vercel)**
+Frontend Dashboard
 https://lead-automation-dashboard.vercel.app
 
-⚡ **Backend API (Render)**
+Backend API
 https://lead-automation-platform.onrender.com
 
 ---
 
-## 🧷 Deployment Status
+## 🧠 Product Overview
 
-![Frontend](https://img.shields.io/badge/Frontend-Vercel-black)
-![Backend](https://img.shields.io/badge/Backend-Render-blue)
-![Node.js](https://img.shields.io/badge/Node.js-Production-green)
-![MongoDB](https://img.shields.io/badge/Database-MongoDB-success)
-![Status](https://img.shields.io/badge/Status-Live-success)
+Lead Automation Platform helps businesses automatically manage incoming leads and convert them into structured sales processes.
+
+The system combines CRM functionality with automation workflows.
+
+### Main Objectives
+
+* Centralize leads
+* Automate follow-ups
+* Track customer activity
+* Reduce manual sales work
+* Scale lead management operations
 
 ---
 
-## 🧠 Overview
+## 👥 Target Users
 
-Lead Automation Platform is a cloud-based SaaS application designed to:
-
-* Manage leads efficiently
-* Automate marketing workflows
-* Provide scalable backend infrastructure
-* Demonstrate production deployment practices
-
-This repository represents **real SaaS engineering**, not a tutorial project.
+* Real Estate Investors
+* Marketing Agencies
+* Sales Teams
+* Lead Generation Companies
+* Automation Businesses
 
 ---
 
@@ -43,20 +46,19 @@ This repository represents **real SaaS engineering**, not a tutorial project.
 
 ```mermaid
 flowchart LR
-A[User Browser] --> B[Next.js Dashboard - Vercel]
-B --> C[Node.js API - Render]
-C --> D[(MongoDB Database)]
-C --> E[Automation Engine]
+User --> Dashboard
+Dashboard --> API
+API --> Database
+API --> AutomationEngine
 ```
 
-### Architecture Highlights
+### Architecture Principles
 
 * Decoupled Frontend & Backend
-* REST API Architecture
-* JWT Authentication
-* Cloud Hosting
-* Automation Event System
-* Production Error Handling
+* API-driven UI
+* Secure Authentication
+* Cloud Deployment
+* Scalable SaaS structure
 
 ---
 
@@ -64,10 +66,10 @@ C --> E[Automation Engine]
 
 ### Frontend
 
-* Next.js 14 (App Router)
+* Next.js 14
 * React
-* Axios API Client
 * TailwindCSS
+* Axios API Client
 
 ### Backend
 
@@ -75,15 +77,13 @@ C --> E[Automation Engine]
 * Express.js
 * MongoDB
 * JWT Authentication
-* Modular Architecture
-* Event Listeners
+* Modular API Architecture
 
-### Cloud & DevOps
+### Cloud Infrastructure
 
-* Vercel Deployment
-* Render Infrastructure
+* Vercel (Frontend Hosting)
+* Render (Backend Hosting)
 * GitHub Version Control
-* Environment Variables Management
 
 ---
 
@@ -91,113 +91,102 @@ C --> E[Automation Engine]
 
 ### 🔐 Authentication
 
-* Secure login system
-* JWT token validation
-* Protected dashboard routes
+Secure login system with JWT authorization.
 
 ### 📊 Dashboard
 
-* Connected to production backend
-* Persistent sessions
-* API-driven UI
+Central control panel displaying:
+
+* total leads
+* automation status
+* system activity
+
+### 📇 Leads Management
+
+CRM-style lead tracking system.
 
 ### 🤖 Automation Engine
 
-* Event-based automation listeners
-* Lead-triggered workflows
-* Scalable background-ready structure
+Event-based automation workflows triggered by lead actions.
 
-### 🧩 API Modules
+### ⚙️ Settings
 
-* Auth Module
-* User Module
-* Lead Module
-* Automation Module
+User configuration and platform management.
 
 ---
 
-## 🚀 Run Locally
+## 🎨 Design Direction (For Designers)
 
-### Clone Repository
+Style inspiration:
+
+* Linear.app
+* Stripe Dashboard
+* Vercel
+* Notion
+
+Design Goals:
+
+* Minimal
+* Modern SaaS
+* Fast navigation
+* Clean data visualization
+* Dark-mode friendly
+
+Focus on **productivity dashboard UI**, not marketing website design.
+
+---
+
+## 🚀 Running Locally
+
+Clone repository:
 
 ```bash
-git clone https://github.com/kelbyr061184-stack/lead-automation-dashboard
-cd lead-automation-dashboard
+git clone https://github.com/kelbyr061184-stack/lead-automation-platform
 ```
 
-### Install Dependencies
+Install dependencies:
 
 ```bash
 npm install
 ```
 
-### Environment Variables
-
-Create `.env.local`
+Environment variables:
 
 ```
-NEXT_PUBLIC_API_URL=http://localhost:5000/api
+JWT_SECRET=
+DATABASE_URL=
+PORT=5000
 ```
 
-### Start Development Server
+Start server:
 
 ```bash
-npm run dev
+npm start
 ```
 
 ---
 
-## 🔐 Test User Example
+## 📈 Product Vision
 
-Create a user via API:
+Lead Automation Platform aims to evolve into:
 
-```
-POST /api/auth/register
-```
-
-Example credentials:
-
-```
-email: admin@test.com
-password: 123456
-```
+* Full CRM system
+* Automation workflow builder
+* Multi-user SaaS platform
+* AI-powered lead assistant
+* Subscription-based SaaS product
 
 ---
 
-## 📈 Project Goals
+## 👨‍💻 Developer
 
-* SaaS-ready infrastructure
-* Automation workflows
-* Lead lifecycle management
-* Cloud-native deployment
-* Scalable backend foundation
+Kelby
+Full Stack Developer
 
----
-
-## 🔮 Future Improvements
-
-* Role-based permissions
-* Automation visual builder
-* Real-time updates (WebSockets)
-* Analytics dashboard
-* Subscription & billing system
+Specialized in SaaS platforms, automation systems, and cloud applications.
 
 ---
 
-## 🧑‍🚀 Developer
+## ⭐ Project Purpose
 
-**Kelby — Full Stack Developer**
-
-Specialized in:
-
-* SaaS Platforms
-* Cloud Architecture
-* API Systems
-* Automation Solutions
-* Production Deployments
-
----
-
-## ⭐ Portfolio Statement
-
-This project represents a **production-level SaaS architecture** showcasing real deployment pipelines, authentication systems, modular backend design, and cloud-ready infrastructure.
+This repository demonstrates a real-world SaaS architecture including authentication, automation logic, modular backend design, and production deployment.
