@@ -1,75 +1,61 @@
-const eventBus = require("../../core/events/event.bus")
-const { runAutomations } = require("./automation.service")
-const logger = require("../../core/logger")
+const eventBus = require("../../core/events/event.bus");
+const { runAutomations } = require("./automation.service");
+const logger = require("../../core/logger");
 
 /*
 |--------------------------------------------------------------------------
-| SINGLETON PROTECTION
+| SINGLETON PROTECTION (evita inicializar dos veces)
 |--------------------------------------------------------------------------
 */
-
-let initialized = false
+let initialized = false;
 
 function initAutomationListeners() {
   if (initialized) {
-    logger.warn("⚠️ Automation listeners already initialized — skipping")
-    return
+    logger.warn("⚠️ Automation listeners already initialized — skipping");
+    return;
   }
 
-  initialized = true
-
-  logger.info("🎧 Initializing automation listeners...")
-
-  /*
-  |--------------------------------------------------------------------------
-  | SAFE EVENT HANDLER WRAPPER
-  |--------------------------------------------------------------------------
-  */
-
+  // ============================================================
+  //  SAFE EVENT HANDLER WRAPPER (mejorado con más detalles)
+  // ============================================================
   const safeHandler = (eventName, handler) => {
     return async (...args) => {
       try {
-        logger.info(`⚡ Event received: ${eventName}`)
-
-        await handler(...args)
-
-        logger.info(`✅ Event processed: ${eventName}`)
+        logger.debug(`⚡ Event received: ${eventName}`); // uso debug para menos ruido
+        await handler(...args);
+        logger.debug(`✅ Event processed: ${eventName}`);
       } catch (error) {
-        logger.error(`🔥 Error processing event: ${eventName}`)
-        logger.error(error)
+        logger.error(`🔥 Error processing event: ${eventName}`);
+        logger.error(error);
       }
-    }
-  }
+    };
+  };
 
-  /*
-  |--------------------------------------------------------------------------
-  | LEAD CREATED EVENT
-  |--------------------------------------------------------------------------
-  */
-
-  eventBus.removeAllListeners("lead.created") // 🔥 evita duplicados
+  // ============================================================
+  //  LEAD CREATED EVENT (con cleanup previo)
+  // ============================================================
+  eventBus.removeAllListeners("lead.created");
 
   eventBus.on(
     "lead.created",
     safeHandler("lead.created", async (lead) => {
       if (!lead) {
-        logger.warn("⚠️ lead.created received without payload")
-        return
+        logger.warn("⚠️ lead.created received without payload");
+        return;
       }
-
-      await runAutomations("lead.created", lead)
+      await runAutomations("lead.created", lead);
     })
-  )
+  );
 
-  logger.info("🎧 Automation listeners initialized successfully")
+  // ============================================================
+  //  Aquí puedes agregar más eventos en el futuro
+  //  eventBus.on("lead.updated", safeHandler(...))
+  // ============================================================
+
+  initialized = true;
+  logger.info("✅ Automation listeners ready (singleton mode)"); // ÚNICO LOG
 }
-
-/*
-|--------------------------------------------------------------------------
-| EXPORT
-|--------------------------------------------------------------------------
-*/
 
 module.exports = {
   initAutomationListeners,
-}
+};
